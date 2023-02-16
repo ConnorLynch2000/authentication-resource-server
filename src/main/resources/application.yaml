@@ -5,14 +5,14 @@ server:
 
 spring:
   rabbitmq:
-    addresses: localhost:5672
-    username: guest
-    password: guest
-    virtual-host: /
+    addresses: ${RABBITMQ_URL}
+    username: ${RABBITMQ_USER}
+    password: ${RABBITMQ_PASS}
+    virtual-host: ${RABBITMQ_VHOST}
   datasource:
-    url: jdbc:postgresql://localhost:5432/developer
-    username: developer
-    password: Cldb@2000
+    url: ${DATASOURCE_URL}
+    username: ${DATASOURCE_USER}
+    password: ${DATASOURCE_PASS}
     driver-class-name: org.postgresql.Driver
     hikari:
       connection-timeout: 30000
@@ -36,9 +36,9 @@ spring:
 app:
   read-only: false
   encryption-key:
-    HMAC-key-secret: 3hEGPxzfQOW79FH8JZTgQaSckc6DAQROX3Np6bNqjRjJWU3wNv
+    HMAC-key-secret: ${HMAC_SECRET_KEY}
   rabbit:
-    addresses: localhost:5672
-    username: guest
-    password: guest
-    virtual-host: /
+    addresses: ${RABBITMQ_URL}
+    username: ${RABBITMQ_USER}
+    password: ${RABBITMQ_PASS}
+    virtual-host: ${RABBITMQ_VHOST}
