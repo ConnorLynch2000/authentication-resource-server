@@ -9,12 +9,12 @@ import org.rajman.authentication.model.dto.AuthenticationToken;
 import org.rajman.authentication.model.dto.LoginDTO;
 import org.rajman.authentication.model.entity.UserEntity;
 import org.rajman.authentication.repository.UserRepository;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionTemplate;
+import org.springframework.util.Base64Utils;
 
-import javax.transaction.Transactional;
 import java.time.LocalDateTime;
+import java.util.Base64;
 import java.util.Optional;
 
 @Slf4j
@@ -25,13 +25,13 @@ public class TokenService {
 
     JwtProvider jwtProvider;
     UserRepository userRepository;
-    PasswordEncoder passwordEncoder;
+    Base64.Encoder encoder = Base64.getEncoder();
     TransactionTemplate transactionTemplate;
 
     public AuthenticationToken login(LoginDTO loginDTO) {
         Optional<UserEntity> user = userRepository.findByUsername(loginDTO.username());
         if (user.isPresent()) {
-            if (user.get().getPassword().equals(passwordEncoder.encode(loginDTO.password()))) {
+            if (user.get().getPassword().equals(encoder.encodeToString(loginDTO.password().getBytes()))) {
                 return generateToken(user.get());
             }
             throw new IllegalArgumentException("Credential is not valid.");
@@ -39,7 +39,7 @@ public class TokenService {
             UserEntity userEntity = transactionTemplate.execute(status ->
                     userRepository.save(UserEntity.builder()
                     .username(loginDTO.username())
-                    .password(loginDTO.password())
+                    .password(encoder.encodeToString(loginDTO.password().getBytes()))
                     .createdAt(LocalDateTime.now())
                     .build()));
             if (userEntity == null){
