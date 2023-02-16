@@ -1,0 +1,44 @@
+server:
+  port: 8082
+  servlet:
+    context-path: /auth
+
+spring:
+  rabbitmq:
+    addresses: localhost:5672
+    username: guest
+    password: guest
+    virtual-host: /
+  datasource:
+    url: jdbc:postgresql://localhost:5432/developer
+    username: developer
+    password: developer
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 180000
+  jpa:
+    hibernate:
+      ddl-auto: none
+      use-new-id-generator-mappings: false
+    properties:
+      hibernate:
+        enable_lazy_load_no_trans: false
+        batch_versioned_data: true
+        order_insert: true
+        order_update: true
+        jdbc:
+          lob:
+            non_contextual_creation: true
+    show-sql: true
+    open-in-view: false
+app:
+  read-only: false
+  encryption-key:
+    HMAC-key-secret: 3hEGPxzfQOW79FH8JZTgQaSckc6DAQROX3Np6bNqjRjJWU3wNv
+  rabbit:
+    addresses: localhost:5672
+    username: guest
+    password: guest
+    virtual-host: /

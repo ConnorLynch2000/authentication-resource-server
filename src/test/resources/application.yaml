@@ -1,0 +1,56 @@
+server:
+  port: 8097
+  servlet:
+    context-path: /iran-map-url
+spring:
+  output:
+    ansi:
+      enabled: always
+  rabbitmq:
+    addresses: 172.20.13.18
+    username: apptest
+    password: TQWL3up
+    virtual-host: app
+  datasource:
+    url: jdbc:postgresql://localhost:5432/iran_map
+    username: developer
+    password: EiPh0Dou@
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 180000
+  jpa:
+    hibernate:
+      ddl-auto: none
+      use-new-id-generator-mappings: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.spatial.dialect.postgis.PostgisDialect
+        enable_lazy_load_no_trans: false
+        batch_versioned_data: true
+        order_insert: true
+        order_update: true
+        jdbc:
+          lob:
+            non_contextual_creation: true
+    show-sql: true
+    open-in-view: false
+logging:
+  pattern:
+    console: "%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} %clr(%-5p) %clr{faint}%clr([%8.15t]){cyan} %clr(%-40.40logger{0}){cyan} %clr(:){red} %clr(%m){faint}%n"
+app:
+  encryption-key:
+    keystore-path: keystore.p12
+    keystore-password: raj@123
+    key-alias: rajman
+    private-key-passphrase: raj@123
+    HMAC-key-secret: 3hEGPxzfQOW79FH8JZTgQaSckc6DAQROX3Np6bNqjRjJWU3wNv
+  proxy:
+    use-proxy: false
+    external:
+      host: 127.0.0.1
+      port: 9998
+  redis:
+    address: redis://127.0.0.1:6379
+    cluster: false
