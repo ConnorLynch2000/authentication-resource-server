@@ -3,14 +3,10 @@ package org.rajman.authentication.model.entity;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.Where;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
 
-/**
- * Created by behzad on 2/20/18.
- */
 @Entity
 @Getter
 @Setter
@@ -22,8 +18,7 @@ import java.time.LocalDateTime;
 public class UserEntity {
 
     @Id
-    @SequenceGenerator(name = "userIdSeq", schema = "auth", sequenceName = "users_id_seq")
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "userIdSeq")
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
     @Column(name = "username", nullable = false, unique = true)
     String username;
