@@ -20,6 +20,7 @@ import org.springframework.stereotype.Component;
 public class RabbitConfiguration {
 
     public static final String SCHEDULER_API_EXCHANGE = "scheduler-api";
+    public static final String AUTH_QUEUE = "auth-queue";
 
     @Primary
     @Bean
@@ -48,4 +49,13 @@ public class RabbitConfiguration {
         return new DirectExchange(SCHEDULER_API_EXCHANGE, true, false);
     }
 
+    @Bean
+    public Queue authQueue(){
+        return new Queue(AUTH_QUEUE, true);
+    }
+
+    @Bean
+    public Binding authBinding(Queue queue, DirectExchange exchange){
+        return BindingBuilder.bind(queue).to(exchange).with("auth");
+    }
 }

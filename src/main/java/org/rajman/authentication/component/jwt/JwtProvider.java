@@ -7,10 +7,6 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
-import org.rajman.authentication.controller.exception.ErrorMessage;
-import org.rajman.authentication.model.dto.UserDetails;
-import org.rajman.authentication.util.StringEncryptUtil;
-import org.rajman.common.genericexceptionhandler.model.GenericErrorException;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
@@ -18,7 +14,9 @@ import javax.crypto.SecretKey;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.*;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 @Slf4j
 @Component
@@ -26,7 +24,6 @@ import java.util.*;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class JwtProvider {
 
-    public static final String REFRESH_TOKEN = "rft";
     public static final String USERNAME = "usn";
     JwtParser jwtParser;
 
@@ -35,54 +32,31 @@ public class JwtProvider {
 
     ObjectMapper objectMapper;
 
-    BlackListService blackListService;
-
-    AuthorizationService authorizationService;
-
 
     public String generateToken(long userId, String username, LocalDateTime expireIn) {
         return generateToken(userId, username, expireIn, false);
-    }
-
-    public String generateRefreshToken(long userId, String username, LocalDateTime expireIn) {
-        return generateToken(userId,username, expireIn, true);
-    }
-
-    public boolean isJwtToken(String token) {
-        return token.split("\\.").length > 1;
     }
 
     public Claims getAllClaimsFromToken(String token) {
         return jwtParser.parseClaimsJws(token).getBody();
     }
 
-    public UserDetails jwtAuthenticate(String token) throws GenericErrorException {
+    public boolean jwtAuthenticate(String token) {
         Claims claims = getAllClaimsFromToken(token);
         if (claims == null) {
-            throw new GenericErrorException(ErrorMessage.InvalidToken);
+            throw new MalformedJwtException("invalid token (token is refresh token)");
         }
         if (isTokenExpired(claims)) {
             throw new ExpiredJwtException(null, claims, "Token is expired");
         }
 
-        if (isRefreshTokenFromClaims(claims)) {
-            throw new MalformedJwtException("invalid token (token is refresh token)");
-        }
-
-        return UserDetails.builder()
-                .userId(Long.parseLong(claims.getId()))
-                .username(StringEncryptUtil.decrypt(claims.get(JwtProvider.USERNAME, String.class)))
-                .build();
+        return true;
     }
 
     private String generateToken(long userId, String username,
                                  LocalDateTime expireIn, boolean isRefreshToken) {
         Map<String, Object> claim = new HashMap<>();
-        claim.put(USERNAME, StringEncryptUtil.encrypt(username));
-
-        if (isRefreshToken) {
-            claim.put(REFRESH_TOKEN, UUID.randomUUID().toString());
-        }
+        claim.put(USERNAME, username);
 
         JwtBuilder jwtBuilder = Jwts.builder().serializeToJsonWith(new JacksonSerializer<>(objectMapper));
         jwtBuilder = jwtBuilder.signWith(key);
@@ -104,14 +78,6 @@ public class JwtProvider {
     private Date getNow() {
         Instant instant = LocalDateTime.now().atZone(ZoneId.systemDefault()).toInstant();
         return Date.from(instant);
-    }
-
-    public long getUserIdFromClaims(Claims claims) {
-        return Long.parseLong(claims.getId());
-    }
-
-    public boolean isRefreshTokenFromClaims(Claims claims) {
-        return claims.containsKey(JwtProvider.REFRESH_TOKEN);
     }
 
     public Boolean isTokenExpired(Claims claims) {

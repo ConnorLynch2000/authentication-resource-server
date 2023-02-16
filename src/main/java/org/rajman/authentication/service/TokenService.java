@@ -5,13 +5,17 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.rajman.authentication.component.jwt.JwtProvider;
+import org.rajman.authentication.model.dto.AuthenticationToken;
+import org.rajman.authentication.model.dto.LoginDTO;
+import org.rajman.authentication.model.entity.UserEntity;
 import org.rajman.authentication.repository.UserRepository;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.support.TransactionTemplate;
 
+import javax.transaction.Transactional;
 import java.time.LocalDateTime;
-import java.util.concurrent.ExecutorService;
+import java.util.Optional;
 
 @Slf4j
 @Service
@@ -22,15 +26,40 @@ public class TokenService {
     JwtProvider jwtProvider;
     UserRepository userRepository;
     PasswordEncoder passwordEncoder;
+    TransactionTemplate transactionTemplate;
 
-    @Qualifier("refreshTokenExecutor")
-    ExecutorService executorService;
+    public AuthenticationToken login(LoginDTO loginDTO) {
+        Optional<UserEntity> user = userRepository.findByUsername(loginDTO.username());
+        if (user.isPresent()) {
+            if (user.get().getPassword().equals(passwordEncoder.encode(loginDTO.password()))) {
+                return generateToken(user.get());
+            }
+            throw new IllegalArgumentException("Credential is not valid.");
+        } else {
+            UserEntity userEntity = transactionTemplate.execute(status ->
+                    userRepository.save(UserEntity.builder()
+                    .username(loginDTO.username())
+                    .password(loginDTO.password())
+                    .createdAt(LocalDateTime.now())
+                    .build()));
+            if (userEntity == null){
+                throw new IllegalArgumentException("Credential is not valid.");
+            }
+            return generateToken(userEntity);
+        }
+    }
+
+    public boolean authenticate(String token){
+        return jwtProvider.jwtAuthenticate(token);
+    }
+
+    private AuthenticationToken generateToken(UserEntity user) {
+        return AuthenticationToken.builder()
+                .token(jwtProvider.generateToken(user.getId(), user.getUsername(), getAccessTokenExpirationDate()))
+                .build();
+    }
 
     private LocalDateTime getAccessTokenExpirationDate() {
         return LocalDateTime.now().plusHours(5);
-    }
-
-    private LocalDateTime getRefreshTokenExpirationDate() {
-        return LocalDateTime.now().plusYears(5);
     }
 }
